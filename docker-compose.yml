@@ -1,0 +1,26 @@
+# Ambiente local de desenvolvimento.
+# As credenciais abaixo são padrões só para uso local e podem ser sobrescritas
+# por variáveis de ambiente ou por um arquivo .env (fora do Git).
+# Em produção as credenciais vêm do AWS Secrets Manager, nunca deste arquivo.
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: nota-fiscal-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-notafiscal}
+      POSTGRES_USER: ${POSTGRES_USER:-notafiscal}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-notafiscal}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # A partir do PostgreSQL 18 a imagem oficial guarda os dados em /var/lib/postgresql
+      # (não mais em /var/lib/postgresql/data).
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
