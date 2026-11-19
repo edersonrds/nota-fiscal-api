@@ -1,8 +1,11 @@
 package br.com.itau.notafiscal.application.usecase
 
+import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
 import br.com.itau.notafiscal.application.port.out.GeradorNumeroNota
+import br.com.itau.notafiscal.application.port.out.NotaFiscalRepository
 import br.com.itau.notafiscal.domain.exception.RegimeTributarioInvalidoException
 import br.com.itau.notafiscal.domain.model.ModoFrete
+import br.com.itau.notafiscal.domain.model.NotaFiscal
 import br.com.itau.notafiscal.domain.model.RegimeTributario
 import br.com.itau.notafiscal.domain.model.umItem
 import br.com.itau.notafiscal.domain.model.umPedido
@@ -16,16 +19,30 @@ import java.time.Clock
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
 class EmitirNotaFiscalServiceTest {
+    private class RepositorioEmMemoria : NotaFiscalRepository {
+        val notas = ConcurrentHashMap<String, NotaFiscal>()
+
+        override fun salvar(nota: NotaFiscal) {
+            val existente = notas.putIfAbsent(nota.pedido.idPedido, nota)
+            if (existente != null) throw PedidoJaEmitidoException(existente.pedido.idPedido, existente.numero)
+        }
+
+        override fun numeroDaNotaDoPedido(idPedido: String) = notas[idPedido]?.numero
+    }
+
     private val ultimoNumero = AtomicLong()
+    private val repositorio = RepositorioEmMemoria()
     private val relogio = Clock.fixed(Instant.parse("2026-11-18T18:30:00.123Z"), ZoneId.of("America/Sao_Paulo"))
     private val service =
         EmitirNotaFiscalService(
             calculadoraTributo = CalculadoraTributo(),
             calculadoraFrete = CalculadoraFrete(ModoFrete.ACRESCIMO),
             geradorNumeroNota = GeradorNumeroNota { ultimoNumero.incrementAndGet() },
+            notaFiscalRepository = repositorio,
             relogio = relogio,
         )
 
@@ -38,18 +55,37 @@ class EmitirNotaFiscalServiceTest {
     }
 
     @Test
-    fun `pedido rejeitado não consome número de nota`() {
-        val pedidoInvalido = umPedido(cliente = umaPessoaJuridica(RegimeTributario.OUTROS))
+    fun `nota emitida é salva`() {
+        val nota = service.emitir(umPedido())
+
+        assertThat(repositorio.notas).containsEntry(nota.pedido.idPedido, nota)
+    }
+
+    @Test
+    fun `pedido rejeitado não consome número de nota nem é salvo`() {
+        val pedidoInvalido = umPedido(cliente = umaPessoaJuridica(RegimeTributario.OUTROS), idPedido = "PED-INVALIDO")
 
         assertThatThrownBy { service.emitir(pedidoInvalido) }
             .isInstanceOf(RegimeTributarioInvalidoException::class.java)
+        assertThat(repositorio.notas).isEmpty()
         assertThat(service.emitir(umPedido()).numero).isEqualTo(1)
     }
 
     @Test
+    fun `pedido já emitido é recusado com o número original e não consome número`() {
+        val primeira = service.emitir(umPedido(idPedido = "PED-1"))
+
+        assertThatThrownBy { service.emitir(umPedido(idPedido = "PED-1")) }
+            .isInstanceOfSatisfying(PedidoJaEmitidoException::class.java) {
+                assertThat(it.numeroNota).isEqualTo(primeira.numero)
+            }
+        assertThat(ultimoNumero.get()).isEqualTo(1)
+    }
+
+    @Test
     fun `segunda emissão não acumula itens da anterior`() {
-        val primeira = service.emitir(umPedido(itens = listOf(umItem("A"))))
-        val segunda = service.emitir(umPedido(itens = listOf(umItem("B"), umItem("C"))))
+        val primeira = service.emitir(umPedido(idPedido = "PED-A", itens = listOf(umItem("A"))))
+        val segunda = service.emitir(umPedido(idPedido = "PED-B", itens = listOf(umItem("B"), umItem("C"))))
 
         assertThat(primeira.tributacao.itens).extracting<String> { it.item.idItem }.containsExactly("A")
         assertThat(segunda.tributacao.itens).extracting<String> { it.item.idItem }.containsExactly("B", "C")

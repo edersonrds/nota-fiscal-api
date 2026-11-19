@@ -39,8 +39,9 @@ fun umPedido(
     cliente: Cliente = umaPessoaFisica(),
     itens: List<Item> = listOf(umItem()),
     valorFrete: String = "50.00",
+    idPedido: String = "PED-1001",
 ) = Pedido(
-    idPedido = "PED-1001",
+    idPedido = idPedido,
     data = LocalDate.of(2026, 11, 18),
     cliente = cliente,
     itens = itens,

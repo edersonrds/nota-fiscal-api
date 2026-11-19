@@ -1,5 +1,6 @@
 package br.com.itau.notafiscal.adapter.`in`.web
 
+import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
 import br.com.itau.notafiscal.domain.exception.RegraNegocioException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
@@ -28,6 +29,11 @@ class TratadorDeErros : ResponseEntityExceptionHandler() {
     @ExceptionHandler(RegraNegocioException::class)
     fun regraDeNegocio(erro: RegraNegocioException): ProblemDetail =
         problema(HttpStatus.UNPROCESSABLE_CONTENT, "Regra de negócio violada", erro.message.orEmpty(), erro.codigo)
+
+    @ExceptionHandler(PedidoJaEmitidoException::class)
+    fun pedidoJaEmitido(erro: PedidoJaEmitidoException): ProblemDetail =
+        problema(HttpStatus.CONFLICT, "Pedido já emitido", erro.message.orEmpty(), "PEDIDO_JA_EMITIDO")
+            .apply { setProperty("numero_nota", erro.numeroNota) }
 
     @ExceptionHandler(Exception::class)
     fun erroInesperado(erro: Exception): ProblemDetail {

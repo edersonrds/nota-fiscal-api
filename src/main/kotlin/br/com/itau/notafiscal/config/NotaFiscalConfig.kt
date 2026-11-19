@@ -2,6 +2,7 @@ package br.com.itau.notafiscal.config
 
 import br.com.itau.notafiscal.application.port.`in`.EmitirNotaFiscalUseCase
 import br.com.itau.notafiscal.application.port.out.GeradorNumeroNota
+import br.com.itau.notafiscal.application.port.out.NotaFiscalRepository
 import br.com.itau.notafiscal.application.usecase.EmitirNotaFiscalService
 import br.com.itau.notafiscal.domain.service.CalculadoraFrete
 import br.com.itau.notafiscal.domain.service.CalculadoraTributo
@@ -28,6 +29,8 @@ class NotaFiscalConfig {
         calculadoraTributo: CalculadoraTributo,
         calculadoraFrete: CalculadoraFrete,
         geradorNumeroNota: GeradorNumeroNota,
+        notaFiscalRepository: NotaFiscalRepository,
         relogio: Clock,
-    ): EmitirNotaFiscalUseCase = EmitirNotaFiscalService(calculadoraTributo, calculadoraFrete, geradorNumeroNota, relogio)
+    ): EmitirNotaFiscalUseCase =
+        EmitirNotaFiscalService(calculadoraTributo, calculadoraFrete, geradorNumeroNota, notaFiscalRepository, relogio)
 }

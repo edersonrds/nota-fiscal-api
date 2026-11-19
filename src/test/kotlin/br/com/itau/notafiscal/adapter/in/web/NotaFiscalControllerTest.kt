@@ -1,5 +1,6 @@
 package br.com.itau.notafiscal.adapter.`in`.web
 
+import br.com.itau.notafiscal.PostgresDeTeste
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +19,7 @@ import java.time.ZoneId
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(NotaFiscalControllerTest.RelogioFixo::class)
+@Import(PostgresDeTeste::class, NotaFiscalControllerTest.RelogioFixo::class)
 class NotaFiscalControllerTest(
     @Autowired private val mockMvc: MockMvc,
 ) {

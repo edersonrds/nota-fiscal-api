@@ -1,5 +1,6 @@
 package br.com.itau.notafiscal.adapter.`in`.web
 
+import br.com.itau.notafiscal.PostgresDeTeste
 import org.hamcrest.Matchers.contains
 import org.hamcrest.Matchers.containsString
 import org.junit.jupiter.api.Nested
@@ -10,18 +11,21 @@ import org.junit.jupiter.params.provider.MethodSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.ResultActionsDsl
 import org.springframework.test.web.servlet.post
 import tools.jackson.databind.json.JsonMapper
 import java.math.BigDecimal
+import java.util.UUID
 import java.util.stream.Stream
 
 typealias Json = MutableMap<String, Any?>
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(PostgresDeTeste::class)
 class NotaFiscalErrosTest(
     @Autowired private val mockMvc: MockMvc,
 ) {
@@ -95,6 +99,34 @@ class NotaFiscalErrosTest(
                 jsonPath("$.title") { value("Regra de negócio violada") }
                 jsonPath("$.detail") { isNotEmpty() }
             }
+        }
+    }
+
+    @Nested
+    inner class `409 - pedido já emitido` {
+        @Test
+        fun `pedido repetido devolve 409 com o número da nota já emitida`() {
+            val pedido = jsonMapper.writeValueAsString(pedidoValido())
+            val numeroEmitido =
+                mockMvc
+                    .post("/notas-fiscais") {
+                        contentType = MediaType.APPLICATION_JSON
+                        content = pedido
+                    }.andExpect { status { isCreated() } }
+                    .andReturn()
+                    .response.contentAsString
+                    .let { jsonMapper.readTree(it)["numero_nota"].asLong() }
+
+            mockMvc
+                .post("/notas-fiscais") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = pedido
+                }.andExpect {
+                    status { isConflict() }
+                    content { contentType(MediaType.APPLICATION_PROBLEM_JSON) }
+                    jsonPath("$.codigo") { value("PEDIDO_JA_EMITIDO") }
+                    jsonPath("$.numero_nota") { value(numeroEmitido) }
+                }
         }
     }
 
@@ -205,7 +237,7 @@ class NotaFiscalErrosTest(
 
         private fun pedidoValido(): Json =
             mutableMapOf(
-                "id_pedido" to "PED-3001",
+                "id_pedido" to "PED-${UUID.randomUUID()}",
                 "data" to "2026-11-18",
                 "cliente" to
                     mutableMapOf(
