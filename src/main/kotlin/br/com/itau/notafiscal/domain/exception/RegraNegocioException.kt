@@ -1,9 +1,23 @@
 package br.com.itau.notafiscal.domain.exception
 
+import br.com.itau.notafiscal.domain.model.RegimeTributario
+
 sealed class RegraNegocioException(
     val codigo: String,
     mensagem: String,
 ) : RuntimeException(mensagem)
+
+class RegimeTributarioInvalidoException(
+    regime: RegimeTributario?,
+) : RegraNegocioException(
+        codigo = "REGIME_TRIBUTARIO_INVALIDO",
+        mensagem =
+            if (regime == null) {
+                "Pessoa jurídica sem regime de tributação informado não pode ter nota gerada."
+            } else {
+                "Pessoa jurídica com regime de tributação $regime não pode ter nota gerada."
+            },
+    )
 
 class EnderecoEntregaAusenteException :
     RegraNegocioException(
