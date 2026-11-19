@@ -3,6 +3,11 @@ package br.com.itau.notafiscal.application.usecase
 import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
 import br.com.itau.notafiscal.application.port.out.GeradorNumeroNota
 import br.com.itau.notafiscal.application.port.out.NotaFiscalRepository
+import br.com.itau.notafiscal.application.port.out.SistemaEntrega
+import br.com.itau.notafiscal.application.port.out.SistemaEstoque
+import br.com.itau.notafiscal.application.port.out.SistemaFinanceiro
+import br.com.itau.notafiscal.application.port.out.SistemaRegistro
+import br.com.itau.notafiscal.application.service.NotificadorSistemas
 import br.com.itau.notafiscal.domain.exception.RegimeTributarioInvalidoException
 import br.com.itau.notafiscal.domain.model.ModoFrete
 import br.com.itau.notafiscal.domain.model.NotaFiscal
@@ -20,6 +25,7 @@ import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.atomic.AtomicLong
 
 class EmitirNotaFiscalServiceTest {
@@ -36,6 +42,14 @@ class EmitirNotaFiscalServiceTest {
 
     private val ultimoNumero = AtomicLong()
     private val repositorio = RepositorioEmMemoria()
+    private val notasNotificadas = ConcurrentLinkedQueue<Long>()
+    private val notificador =
+        NotificadorSistemas(
+            estoque = SistemaEstoque { _, _ -> },
+            registro = SistemaRegistro { notasNotificadas.add(it.numero) },
+            entrega = SistemaEntrega { },
+            financeiro = SistemaFinanceiro { },
+        )
     private val relogio = Clock.fixed(Instant.parse("2026-11-18T18:30:00.123Z"), ZoneId.of("America/Sao_Paulo"))
     private val service =
         EmitirNotaFiscalService(
@@ -43,8 +57,26 @@ class EmitirNotaFiscalServiceTest {
             calculadoraFrete = CalculadoraFrete(ModoFrete.ACRESCIMO),
             geradorNumeroNota = GeradorNumeroNota { ultimoNumero.incrementAndGet() },
             notaFiscalRepository = repositorio,
+            notificadorSistemas = notificador,
             relogio = relogio,
         )
+
+    @Test
+    fun `nota emitida notifica os sistemas`() {
+        val nota = service.emitir(umPedido())
+
+        assertThat(notasNotificadas).containsExactly(nota.numero)
+    }
+
+    @Test
+    fun `pedido rejeitado ou repetido não notifica os sistemas`() {
+        service.emitir(umPedido(idPedido = "PED-X"))
+        notasNotificadas.clear()
+
+        assertThatThrownBy { service.emitir(umPedido(idPedido = "PED-X")) }
+        assertThatThrownBy { service.emitir(umPedido(cliente = umaPessoaJuridica(RegimeTributario.OUTROS), idPedido = "PED-Y")) }
+        assertThat(notasNotificadas).isEmpty()
+    }
 
     @Test
     fun `nota recebe o número do gerador e a data do relógio, sem fração de segundo`() {

@@ -4,6 +4,7 @@ import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
 import br.com.itau.notafiscal.application.port.`in`.EmitirNotaFiscalUseCase
 import br.com.itau.notafiscal.application.port.out.GeradorNumeroNota
 import br.com.itau.notafiscal.application.port.out.NotaFiscalRepository
+import br.com.itau.notafiscal.application.service.NotificadorSistemas
 import br.com.itau.notafiscal.domain.model.NotaFiscal
 import br.com.itau.notafiscal.domain.model.Pedido
 import br.com.itau.notafiscal.domain.service.CalculadoraFrete
@@ -17,6 +18,7 @@ class EmitirNotaFiscalService(
     private val calculadoraFrete: CalculadoraFrete,
     private val geradorNumeroNota: GeradorNumeroNota,
     private val notaFiscalRepository: NotaFiscalRepository,
+    private val notificadorSistemas: NotificadorSistemas,
     private val relogio: Clock,
 ) : EmitirNotaFiscalUseCase {
     override fun emitir(pedido: Pedido): NotaFiscal {
@@ -34,6 +36,7 @@ class EmitirNotaFiscalService(
                 frete = frete,
             )
         notaFiscalRepository.salvar(nota)
+        notificadorSistemas.notificar(nota)
         return nota
     }
 }
