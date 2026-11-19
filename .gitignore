@@ -35,6 +35,9 @@ build/
 ### Variáveis de ambiente locais ###
 .env
 
+### Coleção Bruno (uso local por enquanto) ###
+bruno/
+
 ### Claude Code (uso pessoal, fora do repositório) ###
 .claude/
 CLAUDE.md
