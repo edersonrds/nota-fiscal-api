@@ -1,6 +1,7 @@
 package br.com.itau.notafiscal.adapter.`in`.web
 
 import br.com.itau.notafiscal.application.port.`in`.EmitirNotaFiscalUseCase
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -16,6 +17,6 @@ class NotaFiscalController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun emitir(
-        @RequestBody request: EmitirNotaFiscalRequest,
+        @Valid @RequestBody request: EmitirNotaFiscalRequest,
     ): NotaFiscalResponse = emitirNotaFiscal.emitir(request.paraDominio()).paraResposta()
 }
