@@ -2,7 +2,6 @@ package br.com.itau.notafiscal.adapter.out.persistence
 
 import br.com.itau.notafiscal.PostgresDeTeste
 import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
-import br.com.itau.notafiscal.domain.model.ModoFrete
 import br.com.itau.notafiscal.domain.model.NotaFiscal
 import br.com.itau.notafiscal.domain.model.umItem
 import br.com.itau.notafiscal.domain.model.umPedido
@@ -33,7 +32,7 @@ class NotaFiscalRepositoryJdbcTest(
             dataEmissao = OffsetDateTime.parse("2026-11-18T15:30:00-03:00"),
             pedido = pedido,
             tributacao = CalculadoraTributo().calcular(pedido),
-            frete = CalculadoraFrete(ModoFrete.ACRESCIMO).calcular(pedido),
+            frete = CalculadoraFrete().calcular(pedido),
         )
     }
 
