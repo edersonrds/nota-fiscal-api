@@ -1,0 +1,10 @@
+target
+.git
+.github
+.idea
+.claude
+CLAUDE.md
+CLAUDE.local.md
+bruno
+*.md
+.env
