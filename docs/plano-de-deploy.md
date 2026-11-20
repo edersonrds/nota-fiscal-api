@@ -18,8 +18,6 @@ Como uma versão da API Nota Fiscal chega à produção, como se confirma que es
 - [Como fazer o rollback](#como-fazer-o-rollback)
 - [Hotfix](#hotfix)
 - [Versionamento e rastreabilidade](#versionamento-e-rastreabilidade)
-- [Riscos e o que não foi verificado](#riscos-e-o-que-não-foi-verificado)
-- [Fontes](#fontes)
 
 ## Princípios
 
@@ -274,24 +272,3 @@ Uma correção urgente para um problema em produção.
 - **`/actuator/info` hoje mostra `0.0.1-SNAPSHOT`**, porque a versão do Maven nunca é alterada. Para a rastreabilidade funcionar, o build deveria injetar o hash do commit (por exemplo, nas informações do build), de modo que o `/actuator/info` o mostrasse. **Isso não está implementado.**
 - **Tags no Git** para cada versão publicada e um registro de mudanças curto (o que entrou, o que mudou no esquema).
 - **Correlation id** liga uma requisição aos logs de todas as tarefas, o que ajuda a comparar a versão nova com a antiga durante o canário.
-
-## Riscos e o que não foi verificado
-
-Este é um **plano**: nada foi provisionado nem executado na AWS.
-
-- Os **limiares e tempos** (1% de 5xx, dobro da latência, 10% por 10 minutos, 45 s de `stopTimeout`) são **propostas**, sem linha de base real.
-- As **estratégias embutidas do ECS** (blue/green, canário e linear) são recentes. As fontes consultadas divergem quanto à data exata de cada uma, e a disponibilidade para o tipo de balanceador e a região escolhidos precisa ser **conferida** antes de adotar. Alternativa: CodeDeploy.
-- Os números do **alinhamento de tempos de desligamento** vêm de um guia da comunidade, não da documentação oficial da AWS.
-- O **pipeline de build da imagem e do deploy** não existe: o workflow atual para no CI.
-- Um **ambiente de staging** igual ao de produção tem custo, que não foi estimado.
-- O **ensaio do rollback** (praticar a volta atrás num ambiente de testes) é recomendado e ainda não foi feito.
-- A estratégia de **smoke test em produção** depende de uma decisão de negócio, como descrito acima.
-
-## Fontes
-
-Conferidas em 20/11/2026:
-
-- [Amazon ECS now supports built-in Linear and Canary deployments](https://aws.amazon.com/about-aws/whats-new/2025/10/amazon-ecs-built-in-linear-canary-deployments): anúncio das estratégias embutidas.
-- [Creating an Amazon ECS canary deployment](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/deploy-canary-service.html): documentação do canário no ECS.
-- [Graceful shutdown (Spring Boot 4.1)](https://docs.spring.io/spring-boot/4.1/reference/web/graceful-shutdown.html): comportamento e propriedades do desligamento ordenado.
-- [Graceful shutdown for Spring Boot services on Amazon ECS](https://builder.aws.com/content/3KGmYlSW2Aq406I1NvIzbzU2h7U/graceful-shutdown-for-spring-boot-services-on-amazon-ecs): guia da comunidade sobre o alinhamento dos tempos (não é documentação oficial).
