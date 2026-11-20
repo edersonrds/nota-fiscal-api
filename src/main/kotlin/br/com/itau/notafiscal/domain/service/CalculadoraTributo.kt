@@ -23,14 +23,18 @@ class CalculadoraTributo {
 
     private fun faixasDe(cliente: Cliente): List<Faixa> =
         when (cliente) {
-            is PessoaFisica -> FAIXAS_PESSOA_FISICA
-            is PessoaJuridica ->
+            is PessoaFisica -> {
+                FAIXAS_PESSOA_FISICA
+            }
+
+            is PessoaJuridica -> {
                 when (cliente.regimeTributario) {
                     RegimeTributario.SIMPLES_NACIONAL -> FAIXAS_SIMPLES_NACIONAL
                     RegimeTributario.LUCRO_REAL -> FAIXAS_LUCRO_REAL
                     RegimeTributario.LUCRO_PRESUMIDO -> FAIXAS_LUCRO_PRESUMIDO
                     RegimeTributario.OUTROS, null -> throw RegimeTributarioInvalidoException(cliente.regimeTributario)
                 }
+            }
         }
 
     private fun List<Faixa>.aliquotaPara(totalItens: BigDecimal): BigDecimal =

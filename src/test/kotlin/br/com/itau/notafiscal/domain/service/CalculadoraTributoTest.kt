@@ -104,7 +104,8 @@ class CalculadoraTributoTest {
             val tributacao = calculadora.calcular(pedido)
 
             assertThat(tributacao.aliquota).isEqualTo(BigDecimal("0.12"))
-            assertThat(tributacao.itens).extracting<BigDecimal> { it.valorTributo }
+            assertThat(tributacao.itens)
+                .extracting<BigDecimal> { it.valorTributo }
                 .containsExactly(BigDecimal("36.00"), BigDecimal("36.00"))
         }
 
@@ -132,7 +133,8 @@ class CalculadoraTributoTest {
 
             val tributacao = calculadora.calcular(pedido)
 
-            assertThat(tributacao.itens).extracting<BigDecimal> { it.valorTributo }
+            assertThat(tributacao.itens)
+                .extracting<BigDecimal> { it.valorTributo }
                 .containsOnly(BigDecimal("20.01"))
             assertThat(tributacao.totalTributos).isEqualTo(BigDecimal("60.03"))
         }
@@ -141,7 +143,13 @@ class CalculadoraTributoTest {
         fun `meio centavo é arredondado para o par (HALF_EVEN)`() {
             val pedido = umPedido(cliente = umaPessoaFisica(), itens = listOf(umItem(valorUnitario = "2000.30")))
 
-            assertThat(calculadora.calcular(pedido).itens.single().valorTributo).isEqualTo(BigDecimal("300.04"))
+            assertThat(
+                calculadora
+                    .calcular(pedido)
+                    .itens
+                    .single()
+                    .valorTributo,
+            ).isEqualTo(BigDecimal("300.04"))
         }
 
         @Test

@@ -7,5 +7,5 @@ import org.springframework.boot.runApplication
 class NotaFiscalApiApplication
 
 fun main(args: Array<String>) {
-	runApplication<NotaFiscalApiApplication>(*args)
+    runApplication<NotaFiscalApiApplication>(*args)
 }

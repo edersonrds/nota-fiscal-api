@@ -96,7 +96,8 @@ class ObservabilidadeTest(
     fun `latência do endpoint é medida automaticamente`() {
         emitir(pedido()).andExpect { status { isCreated() } }
 
-        assertThat(prometheus()).contains("http_server_requests_seconds_count{application=\"nota-fiscal-api\"")
+        assertThat(prometheus())
+            .contains("http_server_requests_seconds_count{application=\"nota-fiscal-api\"")
             .containsPattern("uri=\"/notas-fiscais\"")
     }
 
