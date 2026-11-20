@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Permissão de execução do wrapper
+        run: chmod +x mvnw
+
+      - name: Lint (ktlint)
+        run: ./mvnw -B -ntp ktlint:check
+
+      - name: Build, testes e cobertura
+        run: ./mvnw -B -ntp verify
+
+      - name: Publica relatórios
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: relatorios
+          path: |
+            target/site/jacoco
+            target/surefire-reports
+          if-no-files-found: ignore
