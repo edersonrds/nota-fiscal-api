@@ -20,7 +20,6 @@ Desenho do que existe ao redor da API Nota Fiscal em produção: gateway, autent
 - [Implementado e alvo](#implementado-e-alvo)
 - [Decisões e trade-offs](#decisões-e-trade-offs)
 - [O que não foi verificado](#o-que-não-foi-verificado)
-- [Fontes](#fontes)
 
 ## Visão geral
 
@@ -134,7 +133,7 @@ sequenceDiagram
 - **Virtual threads** absorvem muitas requisições simultâneas sem um pool de threads enorme.
 - **Multi-AZ** em tudo que é stateful (RDS) e pelo menos 2 tarefas em AZs diferentes.
 - **Limite de requisições** no gateway (usage plan) e no WAF (regra por origem) protege a API de picos e abuso.
-- **Deploys** sem indisponibilidade (blue/green ou canário) e o critério de rollback ficam no plano de deploy e rollback (item 18), um documento à parte.
+- **Deploys** sem indisponibilidade (blue/green ou canário) e o critério de rollback estão no [plano de deploy e rollback](plano-de-deploy.md).
 - **Banco.** O pool de conexões da API, multiplicado pelo número de tarefas, precisa caber no limite de conexões do RDS. Se o número de tarefas crescer muito, entra um proxy de conexões (RDS Proxy).
 
 ## Implementado e alvo
@@ -174,13 +173,3 @@ Este é um **desenho**: nada aqui foi provisionado nem testado na AWS. Os pontos
 - **cotas e custos** (API Gateway, Lambda, NAT, Datadog, RDS Multi-AZ);
 - o suporte a ALB por **VPC Link V2** na região escolhida;
 - o dimensionamento (tarefas, CPU, memória, conexões do banco) sem teste de carga.
-
-## Fontes
-
-Conferidas em 20/11/2026:
-
-- [Use AWS WAF to protect your REST APIs in API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-control-access-aws-waf.html): o WAF se associa à API REST (a HTTP API não aparece como recurso suportado).
-- [Private integrations for REST APIs in API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/private-integration.html): VPC Link V2 e integração com ALB.
-- [Amazon API Gateway REST APIs now supports private integration with Application Load Balancer](https://aws.amazon.com/about-aws/whats-new/2025/11/api-gateway-rest-apis-integration-load-balancer): anúncio de novembro de 2025.
-
-O plano de deploy e rollback (item 18) será um documento à parte.
