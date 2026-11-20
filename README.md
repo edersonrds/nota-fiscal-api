@@ -440,6 +440,8 @@ Por variável de ambiente ou `application.properties`. Nenhum segredo fica no re
 
 - [Arquitetura do entorno (AWS)](docs/arquitetura-aws.md): gateway, autenticação, rede, dados e eventos, observabilidade, e o que está implementado contra o que é arquitetura-alvo.
 
+- [Plano de deploy e rollback](docs/plano-de-deploy.md): pipeline de entrega, estratégia canário, migrações, feature toggles, checklist de mudança, critérios de rollback e hotfix.
+
 ![Arquitetura do entorno na AWS: visão geral](docs/img/arquitetura-entorno.excalidraw.png)
 
 ## Como usei IA neste projeto
