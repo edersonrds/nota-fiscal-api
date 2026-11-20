@@ -19,13 +19,13 @@ import java.time.Clock
 import java.time.ZoneId
 
 @Configuration(proxyBeanMethods = false)
-@EnableConfigurationProperties(FreteProperties::class, IntegracoesProperties::class)
+@EnableConfigurationProperties(IntegracoesProperties::class)
 class NotaFiscalConfig {
     @Bean
     fun calculadoraTributo() = CalculadoraTributo()
 
     @Bean
-    fun calculadoraFrete(properties: FreteProperties) = CalculadoraFrete(properties.modo)
+    fun calculadoraFrete() = CalculadoraFrete()
 
     @Bean
     fun relogio(): Clock = Clock.system(ZoneId.of("America/Sao_Paulo"))

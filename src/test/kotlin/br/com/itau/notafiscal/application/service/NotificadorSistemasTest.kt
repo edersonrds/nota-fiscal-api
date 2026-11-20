@@ -5,7 +5,6 @@ import br.com.itau.notafiscal.application.port.out.SistemaEntrega
 import br.com.itau.notafiscal.application.port.out.SistemaEstoque
 import br.com.itau.notafiscal.application.port.out.SistemaFinanceiro
 import br.com.itau.notafiscal.application.port.out.SistemaRegistro
-import br.com.itau.notafiscal.domain.model.ModoFrete
 import br.com.itau.notafiscal.domain.model.NotaFiscal
 import br.com.itau.notafiscal.domain.model.umItem
 import br.com.itau.notafiscal.domain.model.umPedido
@@ -79,7 +78,7 @@ class NotificadorSistemasTest {
             dataEmissao = OffsetDateTime.parse("2026-11-18T15:30:00-03:00"),
             pedido = pedido,
             tributacao = CalculadoraTributo().calcular(pedido),
-            frete = CalculadoraFrete(ModoFrete.ACRESCIMO).calcular(pedido),
+            frete = CalculadoraFrete().calcular(pedido),
         )
     }
 

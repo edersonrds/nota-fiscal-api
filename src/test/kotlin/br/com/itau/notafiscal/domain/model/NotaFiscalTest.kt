@@ -10,7 +10,7 @@ import java.time.OffsetDateTime
 
 class NotaFiscalTest {
     private val calculadoraTributo = CalculadoraTributo()
-    private val calculadoraFrete = CalculadoraFrete(ModoFrete.ACRESCIMO)
+    private val calculadoraFrete = CalculadoraFrete()
     private val dataEmissao = OffsetDateTime.parse("2026-11-18T15:30:00-03:00")
 
     private fun emitir(

@@ -10,7 +10,6 @@ import br.com.itau.notafiscal.application.port.out.SistemaFinanceiro
 import br.com.itau.notafiscal.application.port.out.SistemaRegistro
 import br.com.itau.notafiscal.application.service.NotificadorSistemas
 import br.com.itau.notafiscal.domain.exception.RegimeTributarioInvalidoException
-import br.com.itau.notafiscal.domain.model.ModoFrete
 import br.com.itau.notafiscal.domain.model.NotaFiscal
 import br.com.itau.notafiscal.domain.model.RegimeTributario
 import br.com.itau.notafiscal.domain.model.umItem
@@ -57,7 +56,7 @@ class EmitirNotaFiscalServiceTest {
     private val service =
         EmitirNotaFiscalService(
             calculadoraTributo = CalculadoraTributo(),
-            calculadoraFrete = CalculadoraFrete(ModoFrete.ACRESCIMO),
+            calculadoraFrete = CalculadoraFrete(),
             geradorNumeroNota = GeradorNumeroNota { ultimoNumero.incrementAndGet() },
             notaFiscalRepository = repositorio,
             notificadorSistemas = notificador,
