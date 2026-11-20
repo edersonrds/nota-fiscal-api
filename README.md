@@ -15,6 +15,7 @@ Solução do desafio técnico de Engenharia de Software Sênior (Kotlin). O cód
 - [Observabilidade](#observabilidade)
 - [Qualidade e CI](#qualidade-e-ci)
 - [Configuração](#configuração)
+- [Documentação adicional](#documentação-adicional)
 - [Como usei IA neste projeto](#como-usei-ia-neste-projeto)
 - [Limitações conhecidas e o que ficou de fora](#limitações-conhecidas-e-o-que-ficou-de-fora)
 
@@ -434,6 +435,12 @@ Por variável de ambiente ou `application.properties`. Nenhum segredo fica no re
 | `APP_PORT` | `8080` | Porta publicada da API no `docker compose` |
 | `nota-fiscal.integracoes.latencia.estoque` / `.registro` / `.entrega` / `.financeiro` | `300ms` / `200ms` / `400ms` / `250ms` | Latência simulada de cada integração |
 | `LOGGING_STRUCTURED_FORMAT_CONSOLE` | não definido | `ecs` liga o log em JSON |
+
+## Documentação adicional
+
+- [Arquitetura do entorno (AWS)](docs/arquitetura-aws.md): gateway, autenticação, rede, dados e eventos, observabilidade, e o que está implementado contra o que é arquitetura-alvo.
+
+![Arquitetura do entorno na AWS: visão geral](docs/img/arquitetura-entorno.excalidraw.png)
 
 ## Como usei IA neste projeto
 
