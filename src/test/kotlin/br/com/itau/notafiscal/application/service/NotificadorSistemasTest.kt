@@ -1,5 +1,6 @@
 package br.com.itau.notafiscal.application.service
 
+import br.com.itau.notafiscal.application.MetricasEmMemoria
 import br.com.itau.notafiscal.application.port.out.SistemaEntrega
 import br.com.itau.notafiscal.application.port.out.SistemaEstoque
 import br.com.itau.notafiscal.application.port.out.SistemaFinanceiro
@@ -11,7 +12,9 @@ import br.com.itau.notafiscal.domain.model.umPedido
 import br.com.itau.notafiscal.domain.service.CalculadoraFrete
 import br.com.itau.notafiscal.domain.service.CalculadoraTributo
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.slf4j.MDC
 import java.time.Duration
 import java.time.OffsetDateTime
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -22,9 +25,12 @@ class NotificadorSistemasTest {
     private val latencia = Duration.ofMillis(300)
     private val chamadas = ConcurrentLinkedQueue<String>()
     private val threadsVirtuais = ConcurrentLinkedQueue<Boolean>()
+    private val correlationIdsVistos = ConcurrentLinkedQueue<String>()
+    private val metricas = MetricasEmMemoria()
 
     private fun chamar(destino: String) {
         threadsVirtuais.add(Thread.currentThread().isVirtual)
+        correlationIdsVistos.add(MDC.get("correlationId") ?: "ausente")
         Thread.sleep(latencia)
         chamadas.add(destino)
     }
@@ -35,7 +41,36 @@ class NotificadorSistemasTest {
             registro = SistemaRegistro { chamar("registro") },
             entrega = SistemaEntrega { chamar("entrega") },
             financeiro = SistemaFinanceiro { chamar("financeiro") },
+            metricas = metricas,
         )
+
+    @AfterEach
+    fun limparContextoDeLog() = MDC.clear()
+
+    @Test
+    fun `correlation id da requisição chega aos logs de cada virtual thread`() {
+        MDC.put("correlationId", "req-123")
+
+        notificador.notificar(notaCom(quantidadeDeItens = 2))
+
+        assertThat(correlationIdsVistos).hasSize(5).containsOnly("req-123")
+    }
+
+    @Test
+    fun `falha de notificação é contada por sistema`() {
+        val notificadorComFalha =
+            NotificadorSistemas(
+                estoque = SistemaEstoque { _, _ -> error("estoque fora do ar") },
+                registro = SistemaRegistro { },
+                entrega = SistemaEntrega { },
+                financeiro = SistemaFinanceiro { error("financeiro fora do ar") },
+                metricas = metricas,
+            )
+
+        notificadorComFalha.notificar(notaCom(quantidadeDeItens = 2))
+
+        assertThat(metricas.falhasDeNotificacao).containsExactlyInAnyOrder("estoque", "estoque", "financeiro")
+    }
 
     private fun notaCom(quantidadeDeItens: Int): NotaFiscal {
         val pedido = umPedido(itens = List(quantidadeDeItens) { umItem("SKU-$it") })
@@ -88,6 +123,7 @@ class NotificadorSistemasTest {
                 registro = SistemaRegistro { error("registro fora do ar") },
                 entrega = SistemaEntrega { chamar("entrega") },
                 financeiro = SistemaFinanceiro { chamar("financeiro") },
+                metricas = metricas,
             )
 
         notificadorComFalha.notificar(notaCom(quantidadeDeItens = 1))

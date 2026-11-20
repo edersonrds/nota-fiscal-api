@@ -2,6 +2,7 @@ package br.com.itau.notafiscal.config
 
 import br.com.itau.notafiscal.application.port.`in`.EmitirNotaFiscalUseCase
 import br.com.itau.notafiscal.application.port.out.GeradorNumeroNota
+import br.com.itau.notafiscal.application.port.out.MetricasNotaFiscal
 import br.com.itau.notafiscal.application.port.out.NotaFiscalRepository
 import br.com.itau.notafiscal.application.port.out.SistemaEntrega
 import br.com.itau.notafiscal.application.port.out.SistemaEstoque
@@ -35,7 +36,8 @@ class NotaFiscalConfig {
         registro: SistemaRegistro,
         entrega: SistemaEntrega,
         financeiro: SistemaFinanceiro,
-    ) = NotificadorSistemas(estoque, registro, entrega, financeiro)
+        metricas: MetricasNotaFiscal,
+    ) = NotificadorSistemas(estoque, registro, entrega, financeiro, metricas)
 
     @Bean
     fun emitirNotaFiscalUseCase(
@@ -44,6 +46,7 @@ class NotaFiscalConfig {
         geradorNumeroNota: GeradorNumeroNota,
         notaFiscalRepository: NotaFiscalRepository,
         notificadorSistemas: NotificadorSistemas,
+        metricas: MetricasNotaFiscal,
         relogio: Clock,
     ): EmitirNotaFiscalUseCase =
         EmitirNotaFiscalService(
@@ -52,6 +55,7 @@ class NotaFiscalConfig {
             geradorNumeroNota,
             notaFiscalRepository,
             notificadorSistemas,
+            metricas,
             relogio,
         )
 }

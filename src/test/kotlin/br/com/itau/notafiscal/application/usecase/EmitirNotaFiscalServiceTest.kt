@@ -1,5 +1,6 @@
 package br.com.itau.notafiscal.application.usecase
 
+import br.com.itau.notafiscal.application.MetricasEmMemoria
 import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
 import br.com.itau.notafiscal.application.port.out.GeradorNumeroNota
 import br.com.itau.notafiscal.application.port.out.NotaFiscalRepository
@@ -43,12 +44,14 @@ class EmitirNotaFiscalServiceTest {
     private val ultimoNumero = AtomicLong()
     private val repositorio = RepositorioEmMemoria()
     private val notasNotificadas = ConcurrentLinkedQueue<Long>()
+    private val metricas = MetricasEmMemoria()
     private val notificador =
         NotificadorSistemas(
             estoque = SistemaEstoque { _, _ -> },
             registro = SistemaRegistro { notasNotificadas.add(it.numero) },
             entrega = SistemaEntrega { },
             financeiro = SistemaFinanceiro { },
+            metricas = metricas,
         )
     private val relogio = Clock.fixed(Instant.parse("2026-11-18T18:30:00.123Z"), ZoneId.of("America/Sao_Paulo"))
     private val service =
@@ -58,6 +61,7 @@ class EmitirNotaFiscalServiceTest {
             geradorNumeroNota = GeradorNumeroNota { ultimoNumero.incrementAndGet() },
             notaFiscalRepository = repositorio,
             notificadorSistemas = notificador,
+            metricas = metricas,
             relogio = relogio,
         )
 
@@ -66,6 +70,14 @@ class EmitirNotaFiscalServiceTest {
         val nota = service.emitir(umPedido())
 
         assertThat(notasNotificadas).containsExactly(nota.numero)
+    }
+
+    @Test
+    fun `nota emitida é contada na métrica e pedido recusado não é`() {
+        val nota = service.emitir(umPedido(idPedido = "PED-M1"))
+        assertThatThrownBy { service.emitir(umPedido(idPedido = "PED-M1")) }
+
+        assertThat(metricas.emitidas).containsExactly(nota.numero)
     }
 
     @Test

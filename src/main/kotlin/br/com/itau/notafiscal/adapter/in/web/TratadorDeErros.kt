@@ -1,8 +1,10 @@
 package br.com.itau.notafiscal.adapter.`in`.web
 
 import br.com.itau.notafiscal.application.exception.PedidoJaEmitidoException
+import br.com.itau.notafiscal.application.port.out.MetricasNotaFiscal
 import br.com.itau.notafiscal.domain.exception.RegraNegocioException
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
@@ -23,7 +25,9 @@ data class CampoInvalido(
 )
 
 @RestControllerAdvice
-class TratadorDeErros : ResponseEntityExceptionHandler() {
+class TratadorDeErros(
+    private val metricas: MetricasNotaFiscal,
+) : ResponseEntityExceptionHandler() {
     private val log = LoggerFactory.getLogger(javaClass)
 
     @ExceptionHandler(RegraNegocioException::class)
@@ -86,9 +90,14 @@ class TratadorDeErros : ResponseEntityExceptionHandler() {
         titulo: String,
         detalhe: String,
         codigo: String,
-    ) = ProblemDetail.forStatusAndDetail(status, detalhe).apply {
-        title = titulo
-        setProperty("codigo", codigo)
+    ): ProblemDetail {
+        metricas.emissaoRecusada(codigo)
+        if (status.is4xxClientError) log.info("Requisição recusada com {} {}: {}", status.value(), codigo, detalhe)
+        return ProblemDetail.forStatusAndDetail(status, detalhe).apply {
+            title = titulo
+            setProperty("codigo", codigo)
+            setProperty("correlation_id", MDC.get(CorrelationIdFilter.CHAVE_MDC))
+        }
     }
 
     private fun MismatchedInputException.campo(): String =
